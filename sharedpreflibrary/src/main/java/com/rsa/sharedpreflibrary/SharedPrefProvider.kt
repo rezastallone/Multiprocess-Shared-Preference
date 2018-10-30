@@ -8,10 +8,13 @@ import android.net.Uri
 
 class SharedPrefProvider(preferenceName:String = "DEFAULT", mode : Int = MODE_PRIVATE) : ContentProvider() {
 
+    companion object {
+        val AUTHORITY = "com.rsa.sharedpreflibrary"
+    }
+
     private val PREF_NAME = preferenceName
     private val PREF_READ_MODE = mode
-    private val packageName = "com.rsa.sharedpreflibrary"
-    private val CONTENT_URI_PATH = Uri.parse("content://$packageName/sharedpref")
+    private val CONTENT_URI_PATH = Uri.parse("content://$AUTHORITY/sharedpref")
     private val STRING_URI_PATH = "1"
     private val INT_URI_PATH = "2"
     private val BOOLEAN_URI_PATH = "3"
@@ -158,10 +161,10 @@ class SharedPrefProvider(preferenceName:String = "DEFAULT", mode : Int = MODE_PR
         return defaultVal
     }
 
-    fun setString(contentResolver: ContentResolver,pref: String, value : String ){
+    fun setString(contentResolver: ContentResolver,pref: String, value : String ): Uri? {
         val contentValue = ContentValues()
         contentValue.put(pref, value)
-        contentResolver.insert(getStringUri(pref), contentValue)
+        return contentResolver.insert(getStringUri(pref), contentValue)
     }
 
     fun getInt(contentResolver: ContentResolver,pref:String, defaultVal : Int = 0) : Int{

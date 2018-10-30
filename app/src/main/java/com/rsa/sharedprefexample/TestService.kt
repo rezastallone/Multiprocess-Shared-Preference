@@ -8,19 +8,16 @@ import com.rsa.sharedpreflibrary.SharedPrefProvider
 
 class TestService : Service() {
 
-    val PREF_STRING = "prefstring"
-    val PREF_INT = "prefint"
-    val PREF_BOOL = "prefbool"
-    val PREF_LONG = "prefloong"
-    val PREF_FLOAT = "preffloat"
-    val PREF_SET = "prefset"
-    val sharedPref = SharedPrefProvider("haha")
+    val sharedPref = SharedPrefProvider(PREF_NAME)
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         printPref()
+//        test removing a preference
         sharedPref.remove(contentResolver,PREF_STRING)
         printPref()
+//        test clearing whole preference
         sharedPref.clear(contentResolver)
+//        testing default value
         printPrefDefault()
         return super.onStartCommand(intent, flags, startId)
     }
