@@ -20,7 +20,7 @@ allprojects {
 add the dependency
 ```
 dependencies {
-	        implementation 'com.github.rezastallone:Multiprocess-Shared-Preference:0.10'
+	        implementation 'com.github.rezastallone:Multiprocess-Shared-Preference:1.0'
 	}
 ```
 # Examples
