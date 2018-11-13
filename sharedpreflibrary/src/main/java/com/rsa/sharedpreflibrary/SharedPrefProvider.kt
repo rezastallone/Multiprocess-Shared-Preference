@@ -5,6 +5,7 @@ import android.content.Context.MODE_PRIVATE
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
+import android.util.Base64
 
 class SharedPrefProvider(preferenceName:String = "DEFAULT", mode : Int = MODE_PRIVATE) : ContentProvider() {
 
@@ -41,7 +42,7 @@ class SharedPrefProvider(preferenceName:String = "DEFAULT", mode : Int = MODE_PR
                 BOOLEAN_URI_PATH -> editor.putBoolean(pref, values.getAsBoolean(pref))
                 FLOAT_URI_PATH -> editor.putFloat(pref, values.getAsFloat(pref))
                 LONG_URI_PATH -> editor.putLong(pref, values.getAsLong(pref))
-                STRINGSET_URI_PATH -> editor.putStringSet(pref, mutableSetOf(values.getAsString(pref)))
+                STRINGSET_URI_PATH -> editor.putStringSet(pref, values.getAsString(pref).split("|").toMutableSet())
             }
             editor.apply()
         }
@@ -69,7 +70,7 @@ class SharedPrefProvider(preferenceName:String = "DEFAULT", mode : Int = MODE_PR
             STRINGSET_URI_PATH -> {
                 val set = sharedPreference.getStringSet(pref,null)
                 if ( set != null ){
-                    cursor.addRow(arrayOf(set.toString()))
+                    cursor.addRow(arrayOf(set.joinToString("|")))
                 }
             }
             CONTAINS_URI_PATH  -> cursor.addRow(arrayOf(sharedPreference.contains(pref)))
@@ -123,7 +124,7 @@ class SharedPrefProvider(preferenceName:String = "DEFAULT", mode : Int = MODE_PR
 
     private fun getLongUri(pref: String, defaultVal : Long = 0) = getUri("5", pref, defaultVal.toString())
 
-    fun getStringSetUri(pref: String) = getUri("6", pref, "=")
+    private fun getStringSetUri(pref: String) = getUri("6", pref, "=")
 
     private fun getContainsUri(pref: String) = getUri("7", pref, "=")
 
@@ -230,15 +231,25 @@ class SharedPrefProvider(preferenceName:String = "DEFAULT", mode : Int = MODE_PR
     fun getStringSet(contentResolver: ContentResolver,pref: String, defaultVal : MutableSet<String> = mutableSetOf()) : MutableSet<String>{
         val c = contentResolver.query(getStringSetUri(pref), null,null,null,null)
         if ( c != null && c.moveToFirst() ){
-            return mutableSetOf(c.getString(c.getColumnIndex(pref)))
+            val res = mutableSetOf<String>()
+            val str = c.getString(c.getColumnIndex(pref))
+            str.split("|").forEach {
+                val decodedStr = String(Base64.decode(it, Base64.DEFAULT),Charsets.UTF_8)
+                res.add(decodedStr)
+            }
+            return res
         }
         c.close()
         return defaultVal
     }
 
     fun setStringSet(contentResolver: ContentResolver,pref:String, value : MutableSet<String>){
+        val insVal = mutableSetOf<String>()
+        value.forEach { str ->
+            insVal.add(Base64.encodeToString(str.toByteArray(), Base64.DEFAULT).toString())
+        }
         val contentValue = ContentValues()
-        contentValue.put(pref,value.toString())
+        contentValue.put(pref,insVal.joinToString("|"))
         contentResolver.insert(getStringSetUri(pref), contentValue)
     }
 
